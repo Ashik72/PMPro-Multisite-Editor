@@ -11,7 +11,7 @@ function pmpro_mu_editor_options() {
     if (!is_super_admin()) return;
 
     if (!is_main_site()) return;
-    return;
+
 	$titan = TitanFramework::getInstance( 'pmpro_mu_editor' );
 
 	$section = $titan->createAdminPanel( array(
@@ -25,18 +25,29 @@ function pmpro_mu_editor_options() {
     ) );
 
     $tab->createOption( array(
-        'name' => 'Page ID',
-        'id' => 'mu_editor_page_id',
-        'type' => 'text',
-        'desc' => 'Enter page ID where you are selling your membership. Note, use Paid Memberships Pro - Addon Packages along with PMPro.',
-        'default' => ''
-    ) );
-    $tab->createOption( array(
-        'name' => 'Profile Images',
-        'id' => 'bimber_profile_images',
+        'name' => 'General Administrator Can Not Add These User Roles:',
+        'id' => 'protected_user_roles',
         'type' => 'textarea',
-        'desc' => 'One image link per line'
+        'desc' => 'One role per line'
     ) );
+
+    $tab->createOption( array(
+        'name' => 'Free credits for first time:',
+        'id' => 'free_credits',
+        'type' => 'text',
+        'desc' => 'How many free contributors an admin may add?',
+        'default' => '1'
+    ) );
+
+
+    $tab->createOption( array(
+        'name' => 'Free membership level id:',
+        'id' => 'free_level_id',
+        'type' => 'text',
+        'desc' => 'A level is required to let general admin buy access for additional contributors',
+        'default' => '1'
+    ) );
+
 
 
     $section->createOption( array(

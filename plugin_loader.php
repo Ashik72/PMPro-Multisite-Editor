@@ -16,4 +16,14 @@ add_action( 'plugins_loaded', function () {
     pmpro_mu_editor::get_instance();
 } );
 
+
+function your_disable_activation( $user, $user_email, $key, $meta = '' ) {
+// Activate the user
+    $user_id = wpmu_activate_signup( $key );
+
+    wp_redirect( /*redirect to */ site_url() );
+    return false;
+}
+add_filter( 'wpmu_signup_user_notification', 'your_disable_activation', 10, 4 );
+
 ?>

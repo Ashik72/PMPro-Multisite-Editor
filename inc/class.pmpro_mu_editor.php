@@ -37,14 +37,44 @@ class pmpro_mu_editor
 
         add_filter('pmpro_international_addresses', [$this, 'add_hidden_quantity'], 1000, 1);
 
+        add_action('wpmu_new_user', [$this, 'after_signup_user'], 1000, 1);
+
+        add_action('template_redirect', [$this, 'check_and_assign_membership'], 1000);
+
+       // add_filter( 'manage_users_columns', [$this, 'add_credit_col'], 10, 1 );
+
         ////
 
         add_action('template_redirect', function () {
 
             if (empty($_GET['d'])) return;
+
+            $get_quantity = get_user_meta(get_current_user_id(), 'set_editor_quantity', true);
+            var_dump($get_quantity);
+
+
+            wp_die();
+            return;
             $get_quantity = get_user_meta(get_current_user_id(), 'set_editor_quantity', true);
 
-            var_dump($get_quantity);
+            Kint::dump($get_quantity);
+
+            wp_die();
+
+            return;
+
+            $titan = TitanFramework::getInstance( 'pmpro_mu_editor' );
+
+            global $wpdb;
+
+            $pmpro_mu_editor_options = $wpdb->get_var("SELECT option_value FROM {$wpdb->base_prefix}options WHERE option_name = 'pmpro_mu_editor_options'");
+            $pmpro_mu_editor_options = maybe_unserialize($pmpro_mu_editor_options);
+            $pmpro_mu_editor_options = maybe_unserialize($pmpro_mu_editor_options);
+            $protected_user_roles = $pmpro_mu_editor_options['protected_user_roles'];
+            $protected_user_roles = explode("\n", $protected_user_roles);
+
+                Kint::dump($protected_user_roles);
+
             wp_die();
             return;
             Kint::dump(get_user_meta(get_current_user_id()));
@@ -66,6 +96,29 @@ class pmpro_mu_editor
 
             wp_die();
         });
+    }
+
+    public function add_credit_col($column) {
+        if (!is_super_admin()) return $column;
+
+        $column['contributor_balance'] = 'Contributor Balance';
+        return $column;
+
+    }
+
+    public function check_and_assign_membership() {
+
+        if (!is_user_logged_in()) return;
+        if (is_super_admin()) return;
+
+        $user_id = get_current_user_id();
+        if (!empty(pmpro_getMembershipLevelForUser($user_id))) return;
+
+        $pmpro_mu_editor_options = $this->getOptions();
+        $level_to_assign = $pmpro_mu_editor_options['free_level_id'];
+
+        pmpro_changeMembershipLevel($level_to_assign, $user_id);
+
     }
 
     public function add_hidden_quantity($result) {
@@ -140,11 +193,71 @@ class pmpro_mu_editor
 
     public function editable_roles($all_roles) {
 
-     //   var_dump($all_roles);
+        if (is_super_admin()) return $all_roles;
+
+        //Kint::dump($all_roles);
+        $user_id = get_current_user_id();
+        $get_quantity = get_user_meta($user_id, 'set_editor_quantity', true);
+        $get_quantity = intval($get_quantity);
+       // $get_quantity = 0;
+
+        if ($get_quantity <= 0 )
+            unset($all_roles['contributor']);
+
+        $pmpro_mu_editor_options = $this->getOptions();
+        $protected_user_roles = isset($pmpro_mu_editor_options['protected_user_roles']) ? $pmpro_mu_editor_options['protected_user_roles'] : [];
+
+        if (empty($protected_user_roles)) return $all_roles;
+
+
+        $protected_user_roles = explode("\n", $protected_user_roles);
+
+        foreach ($protected_user_roles as $role)
+            unset($all_roles[preg_replace('/\s/', '', strtolower($role))]);
+
 
         return $all_roles;
 
     }
+
+    public function getOptions() {
+
+        global $wpdb;
+
+        $pmpro_mu_editor_options = $wpdb->get_var("SELECT option_value FROM {$wpdb->base_prefix}options WHERE option_name = 'pmpro_mu_editor_options'");
+        $pmpro_mu_editor_options = maybe_unserialize($pmpro_mu_editor_options);
+        $pmpro_mu_editor_options = maybe_unserialize($pmpro_mu_editor_options);
+
+        return $pmpro_mu_editor_options;
+    }
+
+
+    public function after_signup_user($user_id) {
+
+        if (is_super_admin()) {
+            if ( !isset($_POST['blog']) ) return;
+
+            $pmpro_mu_editor_options = $this->getOptions();
+            $free_credits = isset($pmpro_mu_editor_options['free_credits']) ? $pmpro_mu_editor_options['free_credits'] : 0;
+            $free_credits = intval($free_credits);
+            update_user_meta($user_id, 'set_editor_quantity', $free_credits);
+            return;
+        }
+
+        if ($_POST['role'] != 'contributor') return;
+
+
+       // file_put_contents(pmpro_mu_editor_PLUGIN_DIR."data-".time().".txt", maybe_serialize($_POST), FILE_APPEND);
+
+        global $current_user;
+        $user_id = $current_user->ID;
+        $get_quantity = get_user_meta($user_id, 'set_editor_quantity', true);
+        $get_quantity = intval($get_quantity);
+        $get_quantity = $get_quantity - 1;
+        update_user_meta($user_id, 'set_editor_quantity', $get_quantity);
+        return;
+    }
+
 
 
 
