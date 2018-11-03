@@ -1,0 +1,1 @@
+a:2:{i:0;s:14:"user1ns2333332";i:1;a:9:{s:6:"action";s:10:"createuser";s:20:"_wpnonce_create-user";s:10:"1c25c92170";s:16:"_wp_http_referer";s:31:"/newsite1/wp-admin/user-new.php";s:10:"user_login";s:14:"user1ns2333332";s:5:"email";s:18:"user1ns2@n.ne332t2";s:4:"role";s:10:"subscriber";s:5:"pass1";s:8:"sfsdffsd";s:5:"pass2";s:0:"";s:10:"createuser";s:12:"Add New User";}}

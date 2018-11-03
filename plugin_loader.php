@@ -6,7 +6,15 @@ if(!defined('WPINC')) // MUST have WordPress.
 if (file_exists( __DIR__.'/vendor/autoload.php' ))
     require __DIR__.'/vendor/autoload.php';
 
+
+//require_once( plugin_dir_path( __FILE__ ) . '/inc/class-wp-list-table-custom.php' );
+//
+//require_once( plugin_dir_path( __FILE__ ) . '/inc/class-wp-custom-users-list-table.php' );
+
+
 require_once( plugin_dir_path( __FILE__ ) . '/inc/class.pmpro_mu_editor.php' );
+//require_once( plugin_dir_path( __FILE__ ) . '/inc/class.list_table.php' );
+
 
 require_once( 'titan-framework-checker.php' );
 require_once( 'titan-framework-options.php' );
@@ -14,6 +22,7 @@ require_once( 'titan-framework-options.php' );
 
 add_action( 'plugins_loaded', function () {
     pmpro_mu_editor::get_instance();
+   // list_table::get_instance();
 } );
 
 
@@ -25,5 +34,9 @@ function your_disable_activation( $user, $user_email, $key, $meta = '' ) {
     return false;
 }
 add_filter( 'wpmu_signup_user_notification', 'your_disable_activation', 10, 4 );
+
+
+
+
 
 ?>

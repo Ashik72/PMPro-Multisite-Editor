@@ -1,0 +1,67 @@
+.container {
+    display: flow-root;
+}
+
+
+span:hover, span:focus {
+    color: #2a6496;
+    text-decoration: none;
+}
+.square-service-block{
+    position:relative;
+    overflow:hidden;
+    margin:15px auto;
+}
+.square-service-block span {
+    background-color: #577b7d;
+    border-radius: 5px;
+    display: block;
+    padding: 60px 20px;
+    text-align: center;
+    width: 100%;
+}
+.square-service-block span:hover{
+    background-color: rgba(231, 76, 60, 0.8);
+    border-radius: 5px;
+}
+
+.ssb-icon {
+    color: #fff;
+    display: inline-block;
+    font-size: 28px;
+    margin: 0 0 20px;
+}
+
+h2.ssb-title {
+    color: #fff;
+    font-size: 20px;
+    font-weight: 200;
+    margin:0;
+    padding:0;
+    text-transform: uppercase;
+}
+
+a {
+    color: black;
+}
+
+a:hover {
+    color: #74746d;
+}
+
+.square-service-block span:hover .submitdelete.users_custom {
+    display: block;
+}
+
+.submitdelete.users_custom {
+    display: none;
+}
+
+.tablenav-pages-navspan {
+    border: transparent;
+    background: transparent;
+}
+
+.custom_users .bulkactions, .custom_users .actions {
+    display: none;
+}

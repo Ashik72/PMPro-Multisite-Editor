@@ -46,7 +46,6 @@ class pmpro_mu_editor
         ////
 
         add_action('template_redirect', function () {
-
             if (empty($_GET['d'])) return;
 
             $get_quantity = get_user_meta(get_current_user_id(), 'set_editor_quantity', true);
@@ -96,7 +95,37 @@ class pmpro_mu_editor
 
             wp_die();
         });
+
+        add_action('in_admin_header', function () {
+
+            if (is_super_admin()) return;
+
+            $current_screen = get_current_screen();
+
+            if ($current_screen->base != "user") return;
+
+            $get_quantity = get_user_meta(get_current_user_id(), 'set_editor_quantity', true);
+            $get_quantity = intval($get_quantity);
+
+            if ($get_quantity > 0) return;
+
+            $pmpro_mu_editor_options = $this->getOptions();
+
+            ?>
+
+            <script>
+                window.location.replace("<?php _e($pmpro_mu_editor_options['buy_page_link']); ?>");
+            </script>
+
+            <?php
+
+            wp_redirect( $pmpro_mu_editor_options['buy_page_link'] );
+            exit;
+
+        });
+
     }
+
 
     public function add_credit_col($column) {
         if (!is_super_admin()) return $column;
@@ -112,6 +141,9 @@ class pmpro_mu_editor
         if (is_super_admin()) return;
 
         $user_id = get_current_user_id();
+
+        if (!function_exists('pmpro_getMembershipLevelForUser')) return;
+
         if (!empty(pmpro_getMembershipLevelForUser($user_id))) return;
 
         $pmpro_mu_editor_options = $this->getOptions();
@@ -202,7 +234,7 @@ class pmpro_mu_editor
        // $get_quantity = 0;
 
         if ($get_quantity <= 0 )
-            unset($all_roles['contributor']);
+            unset($all_roles['editor']);
 
         $pmpro_mu_editor_options = $this->getOptions();
         $protected_user_roles = isset($pmpro_mu_editor_options['protected_user_roles']) ? $pmpro_mu_editor_options['protected_user_roles'] : [];
@@ -244,7 +276,7 @@ class pmpro_mu_editor
             return;
         }
 
-        if ($_POST['role'] != 'contributor') return;
+        if ($_POST['role'] != 'editor') return;
 
 
        // file_put_contents(pmpro_mu_editor_PLUGIN_DIR."data-".time().".txt", maybe_serialize($_POST), FILE_APPEND);

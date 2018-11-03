@@ -49,6 +49,13 @@ function pmpro_mu_editor_options() {
     ) );
 
 
+    $tab->createOption( array(
+        'name' => 'Buy page link:',
+        'id' => 'buy_page_link',
+        'type' => 'text',
+        'desc' => 'Page to redirect when no credit available',
+        'default' => ''
+    ) );
 
     $section->createOption( array(
   			  'type' => 'save',
