@@ -44,6 +44,8 @@ class pmpro_mu_editor
         // add_filter( 'manage_users_columns', [$this, 'add_credit_col'], 10, 1 );
 
         ////
+        ///
+        add_action('wpmu_activate_blog', [$this, 'after_activate_blog'], 1000, 5);
 
         add_action('template_redirect', function () {
             if (empty($_GET['d'])) return;
@@ -130,9 +132,44 @@ class pmpro_mu_editor
             exit;
 
         });
-
+        add_shortcode( 'pmpro_editor_balance', [$this, 'pmpro_editor_balance'] );
     }
 
+    public function pmpro_editor_balance($atts) {
+
+
+        if (!is_user_logged_in()) return;
+
+        $get_quantity = get_user_meta(get_current_user_id(), 'set_editor_quantity', true);
+
+            return $get_quantity;
+    }
+
+
+    public function after_activate_blog($blog_id, $user_id, $password, $signup_title, $meta) {
+
+        global $wpdb;
+
+        $cap = $wpdb->get_var("SELECT meta_value FROM {$wpdb->base_prefix}usermeta WHERE user_id = {$user_id} AND meta_key LIKE 'wp_{$blog_id}_capabilities'");
+        $cap = maybe_unserialize($cap);
+
+        if (empty($cap['administrator'])) return;
+
+
+        $pmpro_mu_editor_options = $this->getOptions();
+        $free_credits = isset($pmpro_mu_editor_options['free_credits']) ? $pmpro_mu_editor_options['free_credits'] : 0;
+        $free_credits = intval($free_credits);
+        update_user_meta($user_id, 'set_editor_quantity', $free_credits);
+
+        $data = [
+            $cap, $blog_id, $user_id
+        ];
+
+        //file_put_contents(pmpro_mu_editor_PLUGIN_DIR."data-".time().".txt", maybe_serialize($data), FILE_APPEND);
+
+        return;
+
+    }
 
     public function add_credit_col($column) {
         if (!is_super_admin()) return $column;
