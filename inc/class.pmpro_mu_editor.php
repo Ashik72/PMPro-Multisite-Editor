@@ -41,12 +41,19 @@ class pmpro_mu_editor
 
         add_action('template_redirect', [$this, 'check_and_assign_membership'], 1000);
 
-       // add_filter( 'manage_users_columns', [$this, 'add_credit_col'], 10, 1 );
+        // add_filter( 'manage_users_columns', [$this, 'add_credit_col'], 10, 1 );
 
         ////
 
         add_action('template_redirect', function () {
             if (empty($_GET['d'])) return;
+
+
+            $user = new WP_User(16);
+
+
+            Kint::dump($user->get_role_caps());
+            var_dump(in_array("administrator", $user->roles));
 
             $get_quantity = get_user_meta(get_current_user_id(), 'set_editor_quantity', true);
             var_dump($get_quantity);
@@ -72,18 +79,18 @@ class pmpro_mu_editor
             $protected_user_roles = $pmpro_mu_editor_options['protected_user_roles'];
             $protected_user_roles = explode("\n", $protected_user_roles);
 
-                Kint::dump($protected_user_roles);
+            Kint::dump($protected_user_roles);
 
             wp_die();
             return;
             Kint::dump(get_user_meta(get_current_user_id()));
 
-           //update_user_meta(get_current_user_id(), '_pmproap_posts', []);
+            //update_user_meta(get_current_user_id(), '_pmproap_posts', []);
 
 
-           $post_users = get_post_meta( 14, '_pmproap_users', true );
+            $post_users = get_post_meta( 14, '_pmproap_users', true );
 
-           update_post_meta( 14, '_pmproap_users', [] );
+            update_post_meta( 14, '_pmproap_users', [] );
 
 
             Kint::dump($post_users);
@@ -159,8 +166,8 @@ class pmpro_mu_editor
     }
 
     public function load_custom_wp_frontend_style() {
-            wp_enqueue_style( 'pmpro_mu_editor-style-css', pmpro_mu_editor_PLUGIN_URL.'css/custom.css' );
-        }
+        wp_enqueue_style( 'pmpro_mu_editor-style-css', pmpro_mu_editor_PLUGIN_URL.'css/custom.css' );
+    }
 
 
     public function get_post_metadata($null, $object_id, $meta_key, $single) {
@@ -189,6 +196,9 @@ class pmpro_mu_editor
         $user_id = get_current_user_id();
         $text_level_id = pmproap_getLevelIDForCheckoutLink($page_id, $user_id);
 
+        $pmpro_mu_editor_options = $this->getOptions();
+
+        $text_level_id = intval($pmpro_mu_editor_options['free_level_id']);
         ob_start();
 
 
@@ -231,7 +241,7 @@ class pmpro_mu_editor
         $user_id = get_current_user_id();
         $get_quantity = get_user_meta($user_id, 'set_editor_quantity', true);
         $get_quantity = intval($get_quantity);
-       // $get_quantity = 0;
+        // $get_quantity = 0;
 
         if ($get_quantity <= 0 )
             unset($all_roles['editor']);
@@ -266,6 +276,9 @@ class pmpro_mu_editor
 
     public function after_signup_user($user_id) {
 
+        file_put_contents(pmpro_mu_editor_PLUGIN_DIR."data-".time().".txt", maybe_serialize([$user_id, $_POST, get_user_meta($user_id)]), FILE_APPEND);
+
+
         if (is_super_admin()) {
             if ( !isset($_POST['blog']) ) return;
 
@@ -279,7 +292,6 @@ class pmpro_mu_editor
         if ($_POST['role'] != 'editor') return;
 
 
-       // file_put_contents(pmpro_mu_editor_PLUGIN_DIR."data-".time().".txt", maybe_serialize($_POST), FILE_APPEND);
 
         global $current_user;
         $user_id = $current_user->ID;
