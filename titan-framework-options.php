@@ -35,7 +35,7 @@ function pmpro_mu_editor_options() {
         'name' => 'Free credits for first time:',
         'id' => 'free_credits',
         'type' => 'text',
-        'desc' => 'How many free contributors an admin may add?',
+        'desc' => 'How many free editors an admin may add?',
         'default' => '1'
     ) );
 
@@ -44,7 +44,7 @@ function pmpro_mu_editor_options() {
         'name' => 'Free membership level id:',
         'id' => 'free_level_id',
         'type' => 'text',
-        'desc' => 'A level is required to let general admin buy access for additional contributors',
+        'desc' => 'A level is required to let general admin buy access for additional editors',
         'default' => '1'
     ) );
 
