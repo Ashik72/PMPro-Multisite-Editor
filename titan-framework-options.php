@@ -144,7 +144,7 @@ function pmpro_mu_editor_options_site_admin()
     $tab->createOption( array(
         'name' => 'Current Balance:',
         'type' => 'custom',
-        'custom' => get_user_meta(get_current_user_id(), 'set_editor_quantity', true)
+        'custom' => empty(get_user_meta(get_current_user_id(), 'set_editor_quantity', true)) ? 0 : get_user_meta(get_current_user_id(), 'set_editor_quantity', true)
     ) );
 
     $tab->createOption( array(

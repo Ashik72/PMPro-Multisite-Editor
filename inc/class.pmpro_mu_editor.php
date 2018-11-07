@@ -57,6 +57,8 @@ class pmpro_mu_editor
 //            Kint::dump($user->get_role_caps());
 //            var_dump(in_array("administrator", $user->roles));
 
+            delete_user_meta(get_current_user_id(), 'set_editor_quantity');
+
             $get_quantity = get_user_meta(get_current_user_id(), 'set_editor_quantity', true);
             var_dump($get_quantity);
 
@@ -113,16 +115,15 @@ class pmpro_mu_editor
             if ($get_quantity > 0) return;
 
             $pmpro_mu_editor_options = $this->getOptions();
-
             ?>
 
             <script>
-                window.location.replace("<?php _e($pmpro_mu_editor_options['buy_page_link']); ?>");
+                window.location.replace("<?php _e(get_admin_url().'admin.php?page=subscription&tab=purchase-access'); ?>");
             </script>
 
             <?php
 
-            wp_redirect( $pmpro_mu_editor_options['buy_page_link'] );
+            wp_redirect( get_admin_url().'admin.php?page=subscription&tab=purchase-access' );
             exit;
 
         });
@@ -211,7 +212,7 @@ class pmpro_mu_editor
             $cap, $blog_id, $user_id
         ];
 
-        //file_put_contents(pmpro_mu_editor_PLUGIN_DIR."data-".time().".txt", maybe_serialize($data), FILE_APPEND);
+        file_put_contents(pmpro_mu_editor_PLUGIN_DIR."aadata-".time().".txt", maybe_serialize($data), FILE_APPEND);
 
         return;
 
@@ -331,7 +332,7 @@ class pmpro_mu_editor
         $quantity_tot = intval($_REQUEST['quantity']) + intval($get_quantity);
         update_user_meta($user_id, 'set_editor_quantity', $quantity_tot);
 
-        file_put_contents(pmpro_mu_editor_PLUGIN_DIR."data-".time().".txt", maybe_serialize([$_SESSION, $user_id, $_REQUEST]), FILE_APPEND);
+        file_put_contents(pmpro_mu_editor_PLUGIN_DIR."acdata-".time().".txt", maybe_serialize([$_SESSION, $user_id, $_REQUEST]), FILE_APPEND);
 
     }
 
@@ -382,8 +383,14 @@ class pmpro_mu_editor
 
     public function after_signup_user($user_id) {
 
-        file_put_contents(pmpro_mu_editor_PLUGIN_DIR."data-".time().".txt", maybe_serialize([$user_id, $_POST, get_user_meta($user_id)]), FILE_APPEND);
+        $created_uid = $user_id;
 
+        global $current_user;
+        $user_id = $current_user->ID;
+
+        $credit_applied = get_user_meta($created_uid, 'credit_applied', true);
+
+        if (!empty($credit_applied)) return;
 
         if (is_super_admin()) {
             if ( !isset($_POST['blog']) ) return;
@@ -392,17 +399,23 @@ class pmpro_mu_editor
             $free_credits = isset($pmpro_mu_editor_options['free_credits']) ? $pmpro_mu_editor_options['free_credits'] : 0;
             $free_credits = intval($free_credits);
             update_user_meta($user_id, 'set_editor_quantity', $free_credits);
+            update_user_meta($created_uid, 'credit_applied', true);
+
             return;
         }
 
         if ($_POST['role'] != 'editor') return;
 
 
+        update_user_meta($created_uid, 'credit_applied', true);
 
         global $current_user;
         $user_id = $current_user->ID;
         $get_quantity = get_user_meta($user_id, 'set_editor_quantity', true);
         $get_quantity = intval($get_quantity);
+
+        file_put_contents(pmpro_mu_editor_PLUGIN_DIR."sdata-".time().".txt", maybe_serialize($get_quantity), FILE_APPEND);
+
         $get_quantity = $get_quantity - 1;
         update_user_meta($user_id, 'set_editor_quantity', $get_quantity);
         return;
