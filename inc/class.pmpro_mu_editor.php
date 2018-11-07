@@ -310,6 +310,10 @@ class pmpro_mu_editor
         return $pmpro_mu_editor_options;
     }
 
+    public static function getEditorOptions() {
+        return (new self)->getOptions();
+    }
+
 
     public function after_signup_user($user_id) {
 
