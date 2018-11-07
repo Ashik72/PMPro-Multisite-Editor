@@ -24,6 +24,7 @@ class pmpro_mu_editor
 
     function __construct()  {
         add_action( 'wp_enqueue_scripts', array($this, 'load_custom_wp_frontend_style'), 50 );
+        add_action( 'admin_enqueue_scripts', array($this, 'load_custom_wp_admin_frontend_style'), 50 );
 
         add_filter('editable_roles', [$this, 'editable_roles'], 10, 1);
 
@@ -49,13 +50,12 @@ class pmpro_mu_editor
 
         add_action('template_redirect', function () {
             if (empty($_GET['d'])) return;
+            //global $current_user;
+            $current_user = new WP_User(get_current_user_id(), '',1);
 
 
-            $user = new WP_User(16);
-
-
-            Kint::dump($user->get_role_caps());
-            var_dump(in_array("administrator", $user->roles));
+//            Kint::dump($user->get_role_caps());
+//            var_dump(in_array("administrator", $user->roles));
 
             $get_quantity = get_user_meta(get_current_user_id(), 'set_editor_quantity', true);
             var_dump($get_quantity);
@@ -95,12 +95,6 @@ class pmpro_mu_editor
             update_post_meta( 14, '_pmproap_users', [] );
 
 
-            Kint::dump($post_users);
-
-
-            Kint::dump(get_user_meta(get_current_user_id(), '_pmproap_posts', true));
-
-
 
             wp_die();
         });
@@ -133,6 +127,58 @@ class pmpro_mu_editor
 
         });
         add_shortcode( 'pmpro_editor_balance', [$this, 'pmpro_editor_balance'] );
+
+        add_action('template_redirect', function () {
+            global $wpdb;
+            pmpro_mu_editor::changePMProTables();
+
+        });
+
+        add_action('wp_footer', [$this, 'update_page_design']);
+
+        add_action('pmpro_email_field_type', [$this, 'update_price'], 10, 1);
+
+    }
+
+
+    public function update_price($data) {
+        global $pmpro_level;
+        $pmpro_level->billing_amount = $pmpro_level->billing_amount * intval($_GET['quantity']);
+
+
+        return $data;
+    }
+
+    public function update_page_design() {
+
+        $options = self::getEditorOptions();
+        if (is_page($options['checkout_page_id']) || is_page('membership-confirmation'))        {
+
+            global $pmpro_level;
+            $quantity = intval($_GET['quantity']);
+            global $pmpro_currency;
+            $txt = $pmpro_level->billing_amount." ".$pmpro_currency." for {$quantity} member(s).";
+            ?>
+
+            <script>
+
+                jQuery(document).ready(function ($) {
+
+                    $("#wpadminbar").css("display", "none");
+                    $("#masthead").css("display", "none");
+                    $("#colophon").css("display", "none");
+
+                    $("#pmpro_level_cost p").html("Please pay "+"<?php _e($txt); ?>");
+
+                })
+
+            </script>
+
+            <?php
+
+
+
+        }
     }
 
     public function pmpro_editor_balance($atts) {
@@ -198,12 +244,31 @@ class pmpro_mu_editor
     }
 
     public function add_hidden_quantity($result) {
-        echo '<input id="quantity" name="quantity" value="'.$_POST['quantity'].'" type="hidden">';
+        echo '<input id="quantity" name="quantity" value="'.$_GET['quantity'].'" type="hidden">';
         return $result;
     }
 
+    public function load_custom_wp_admin_frontend_style() {
+
+
+        wp_register_script('pmpro_mu_editor_main-users-custom', pmpro_mu_editor_PLUGIN_URL . 'js/users.js', array('jquery'), '', false);
+
+        $adminurl = admin_url();
+
+        wp_localize_script('pmpro_mu_editor_main-users-custom', 'mu_custom', array(
+            'ajax_url' => admin_url('admin-ajax.php'),
+            'is_super_admin' => is_super_admin(),
+            'admin_dir' => $adminurl,
+        ));
+        wp_enqueue_script('pmpro_mu_editor_main-users-custom');
+
+    }
+
+
     public function load_custom_wp_frontend_style() {
         wp_enqueue_style( 'pmpro_mu_editor-style-css', pmpro_mu_editor_PLUGIN_URL.'css/custom.css' );
+
+
     }
 
 
@@ -266,7 +331,7 @@ class pmpro_mu_editor
         $quantity_tot = intval($_REQUEST['quantity']) + intval($get_quantity);
         update_user_meta($user_id, 'set_editor_quantity', $quantity_tot);
 
-        //file_put_contents(pmpro_mu_editor_PLUGIN_DIR."data-".time().".txt", maybe_serialize([$_SESSION, $user_id, $_REQUEST]), FILE_APPEND);
+        file_put_contents(pmpro_mu_editor_PLUGIN_DIR."data-".time().".txt", maybe_serialize([$_SESSION, $user_id, $_REQUEST]), FILE_APPEND);
 
     }
 
@@ -342,6 +407,49 @@ class pmpro_mu_editor
         update_user_meta($user_id, 'set_editor_quantity', $get_quantity);
         return;
     }
+
+
+    public static function changePMProTables() {
+        global $wpdb;
+        foreach($wpdb as $key => $value) {
+            if (is_array($wpdb->$key)) continue;
+            if (empty(strpos($wpdb->$key, 'pmpro'))) continue;
+            $wpdb->$key = str_replace($wpdb->prefix, $wpdb->base_prefix, $value);
+        }
+    }
+
+        public static function pmpro_admin_checkout() {
+            ob_start();
+            global $current_user;
+            $plugin_dir = ABSPATH . 'wp-content'.DIRECTORY_SEPARATOR.'plugins'.DIRECTORY_SEPARATOR;
+
+            $options = self::getEditorOptions();
+
+            $pmpro_dir = $plugin_dir."paid-memberships-pro";
+
+            //include( $pmpro_dir . "/preheaders/checkout.php");
+
+            //include( $pmpro_dir . "/pages/checkout.php");
+            $text_level_id = 1;
+
+            $free_level_id = $options['free_level_id'];
+
+
+
+            if (isset($_POST['admin_add_editor_submit']))
+                include_once pmpro_mu_editor_PLUGIN_DIR."/template/pay_frame.php";
+            else
+                include_once pmpro_mu_editor_PLUGIN_DIR."/template/form.php";
+
+            ?>
+
+
+
+            <?php
+
+            $output = ob_get_clean();
+            return $output;
+        }
 
 
 

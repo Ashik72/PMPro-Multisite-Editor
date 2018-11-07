@@ -58,12 +58,21 @@ function pmpro_mu_editor_options() {
     ) );
 
     $tab->createOption( array(
-        'name' => 'Buy page link:',
-        'id' => 'buy_page_link',
+        'name' => 'Checkout Page Link:',
+        'id' => 'checkout_page_link',
         'type' => 'text',
-        'desc' => 'Page to redirect when no credit available',
+        'desc' => 'Checkout Page Link for iframe',
         'default' => ''
     ) );
+
+    $tab->createOption( array(
+        'name' => 'Checkout Page ID:',
+        'id' => 'checkout_page_id',
+        'type' => 'text',
+        'desc' => 'Checkout Page ID for iframe',
+        'default' => ''
+    ) );
+
 
     $section->createOption( array(
   			  'type' => 'save',
@@ -74,12 +83,37 @@ function pmpro_mu_editor_options() {
 
 add_action( 'tf_create_options', 'pmpro_mu_editor_options_site_admin', 200 );
 
+
 function pmpro_mu_editor_options_site_admin()
 {
 
     if (is_super_admin()) return;
+    if (!is_admin()) return;
+    global $wpdb, $current_user;
+    $dir = plugin_dir_path( __DIR__ );
 
-    global $wpdb;
+    if (!file_exists($dir."paid-memberships-pro".DIRECTORY_SEPARATOR."paid-memberships-pro.php"))
+        wp_die('PMPro does not exists!');
+
+    $pmpro_dir = $dir."paid-memberships-pro";
+
+
+    require_once($pmpro_dir . "/includes/countries.php");
+    require_once($pmpro_dir . "/includes/states.php");
+    require_once($pmpro_dir . "/includes/currencies.php");
+
+    include_once $dir."paid-memberships-pro".DIRECTORY_SEPARATOR."paid-memberships-pro.php";
+
+    pmpro_mu_editor::changePMProTables();
+
+    //$current_user = new WP_User(get_current_user_id(), '', 1);
+    //require_once($pmpro_dir . "/preheaders/levels.php");
+    //require_once($pmpro_dir . "/preheaders/checkout.php");
+
+
+
+    //
+
     $args = [
         'role'           => 'Editor'
     ];
@@ -91,10 +125,10 @@ function pmpro_mu_editor_options_site_admin()
     $get_level_data = $wpdb->get_row("SELECT * FROM `{$wpdb->base_prefix}pmpro_membership_levels` WHERE id = {$paid_level_id}");
 
 
-    //$pmpro_options = $wpdb->get_results("SELECT * FROM `{$wpdb->base_prefix}options` WHERE option_name LIKE \"%pmpro%\"");
-
     $pmpro_currency = $wpdb->get_var("SELECT option_value FROM `{$wpdb->base_prefix}options` WHERE option_name = 'pmpro_currency'");
 
+
+    $_REQUEST['level'] = $paid_level_id;
 
     $titan = TitanFramework::getInstance( 'pmpro_mu_editor_gadmin' );
 
@@ -144,9 +178,10 @@ function pmpro_mu_editor_options_site_admin()
 
 
     $tab->createOption( array(
-        'name' => 'Estimated Bill:',
+        'name' => 'Number of Editors:',
         'type' => 'custom',
-        'custom' => "On Development"
+        'class' => 'neditors',
+        'custom' => pmpro_mu_editor::pmpro_admin_checkout()
     ) );
 
 }
