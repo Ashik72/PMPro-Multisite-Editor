@@ -6,6 +6,7 @@ jQuery(document).ready(function($) {
             console.log("dsf");
           //  this.users_search_page();
             this.iframe_adjust();
+            this.hide_menus();
         },
 
         users_search_page: function () {
@@ -24,7 +25,16 @@ jQuery(document).ready(function($) {
                 $iframe.contents().find( "body" ).css( "display", "none" );
             });
 
+        },
+
+        hide_menus: function () {
+
+            if (mu_custom.is_main_site) return;
+
+            $("#toplevel_page_pmpro-membershiplevels").css("display", "none");
+
         }
+
 
 
     };

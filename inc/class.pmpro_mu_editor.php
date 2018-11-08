@@ -260,6 +260,7 @@ class pmpro_mu_editor
             'ajax_url' => admin_url('admin-ajax.php'),
             'is_super_admin' => is_super_admin(),
             'admin_dir' => $adminurl,
+            'is_main_site' => is_main_site()
         ));
         wp_enqueue_script('pmpro_mu_editor_main-users-custom');
 
